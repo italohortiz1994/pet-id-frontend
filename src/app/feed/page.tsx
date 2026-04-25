@@ -1,4 +1,5 @@
 import { PetFeed } from "@/components/pet-feed";
+import { getSessionToken } from "@/lib/api";
 import { getPets, type Pet } from "@/lib/pets";
 import { getPetNews, type PetNews } from "@/lib/pet-news";
 
@@ -6,11 +7,14 @@ export default async function FeedPage() {
   let pets: Pet[] = [];
   let news: PetNews[] = [];
   let errorMessage = "";
+  const isLoggedIn = Boolean(await getSessionToken());
 
-  try {
-    pets = await getPets();
-  } catch {
-    pets = [];
+  if (isLoggedIn) {
+    try {
+      pets = await getPets();
+    } catch {
+      pets = [];
+    }
   }
 
   try {
@@ -20,5 +24,5 @@ export default async function FeedPage() {
     errorMessage = error instanceof Error ? error.message : "Nao foi possivel carregar o feed.";
   }
 
-  return <PetFeed pets={pets} news={news} errorMessage={errorMessage} />;
+  return <PetFeed pets={pets} news={news} errorMessage={errorMessage} isLoggedIn={isLoggedIn} />;
 }

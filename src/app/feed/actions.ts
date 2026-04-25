@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getSessionToken } from "@/lib/api";
 import {
   createPetNews,
   serializePetNewsFormData,
@@ -17,6 +18,16 @@ export async function createPetNewsAction(
   _: PetNewsFormState,
   formData: FormData,
 ): Promise<PetNewsFormState> {
+  const token = await getSessionToken();
+
+  if (!token) {
+    return {
+      message: "Entre na sua conta para publicar e interagir no feed.",
+      errors: {},
+      ok: false,
+    };
+  }
+
   const values = serializePetNewsFormData(formData);
   const errors = validatePetNewsPayload(values);
 

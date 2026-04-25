@@ -7,8 +7,9 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
   const isPublicPetPage = pathname.startsWith("/public/pet/");
   const isPublicRegistrationPage = pathname === "/tutores/new" || pathname === "/veterinarios/new";
+  const isPublicFeedPage = pathname === "/feed";
 
-  if (isPublicPetPage || isPublicRegistrationPage) {
+  if (isPublicPetPage || isPublicRegistrationPage || isPublicFeedPage) {
     return NextResponse.next();
   }
 

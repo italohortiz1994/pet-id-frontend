@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPetNewsAction, type PetNewsFormState } from "@/app/feed/actions";
 import type { PetNews } from "@/lib/pet-news";
@@ -16,6 +17,7 @@ type PetFeedProps = {
   pets: Pet[];
   news: PetNews[];
   errorMessage?: string;
+  isLoggedIn: boolean;
 };
 
 const fallbackPets: Pet[] = [
@@ -95,7 +97,7 @@ function formatNewsDate(value: string) {
   }).format(date);
 }
 
-export function PetFeed({ pets, news, errorMessage = "" }: PetFeedProps) {
+export function PetFeed({ pets, news, errorMessage = "", isLoggedIn }: PetFeedProps) {
   const sourcePets = pets.length > 0 ? pets : fallbackPets;
   const friends = useMemo(() => buildFriends(sourcePets), [sourcePets]);
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
@@ -137,62 +139,73 @@ export function PetFeed({ pets, news, errorMessage = "" }: PetFeedProps) {
             </div>
           ) : null}
 
-          <form ref={formRef} action={formAction} className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-4">
-            <div className="grid gap-4 md:grid-cols-[1fr_0.7fr]">
-              <label>
-                <span className="field-label">Titulo</span>
-                <input className="field" name="title" placeholder="Ex: Vacina atualizada" />
-                {state.errors.title ? <p className="field-error">{state.errors.title}</p> : null}
-              </label>
-              <label>
-                <span className="field-label">Categoria</span>
-                <input
-                  className="field"
-                  name="category"
-                  placeholder="Saude, passeio, rotina..."
-                  defaultValue="Novidade"
+          {isLoggedIn ? (
+            <form ref={formRef} action={formAction} className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-4">
+              <div className="grid gap-4 md:grid-cols-[1fr_0.7fr]">
+                <label>
+                  <span className="field-label">Titulo</span>
+                  <input className="field" name="title" placeholder="Ex: Vacina atualizada" />
+                  {state.errors.title ? <p className="field-error">{state.errors.title}</p> : null}
+                </label>
+                <label>
+                  <span className="field-label">Categoria</span>
+                  <input
+                    className="field"
+                    name="category"
+                    placeholder="Saude, passeio, rotina..."
+                    defaultValue="Novidade"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-[1fr_0.7fr]">
+                <label>
+                  <span className="field-label">Pet relacionado</span>
+                  <select className="field" name="petId" defaultValue="">
+                    <option value="">Sem pet especifico</option>
+                    {pets.map((pet) => (
+                      <option key={pet.id} value={pet.id}>
+                        {pet.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span className="field-label">Imagem</span>
+                  <input className="field" name="imageUrl" placeholder="https://..." type="url" />
+                </label>
+              </div>
+
+              <label className="mt-4 block">
+                <span className="field-label">Nova noticia</span>
+                <textarea
+                  className="field min-h-28"
+                  name="content"
+                  maxLength={280}
+                  onChange={(event) => setContent(event.target.value)}
+                  placeholder="Compartilhe uma atualizacao do pet, um passeio, vacina ou conquista."
                 />
+                {state.errors.content ? <p className="field-error">{state.errors.content}</p> : null}
               </label>
-            </div>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-[1fr_0.7fr]">
-              <label>
-                <span className="field-label">Pet relacionado</span>
-                <select className="field" name="petId" defaultValue="">
-                  <option value="">Sem pet especifico</option>
-                  {pets.map((pet) => (
-                    <option key={pet.id} value={pet.id}>
-                      {pet.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span className="field-label">Imagem</span>
-                <input className="field" name="imageUrl" placeholder="https://..." type="url" />
-              </label>
-            </div>
-
-            <label className="mt-4 block">
-              <span className="field-label">Nova noticia</span>
-              <textarea
-                className="field min-h-28"
-                name="content"
-                maxLength={280}
-                onChange={(event) => setContent(event.target.value)}
-                placeholder="Compartilhe uma atualizacao do pet, um passeio, vacina ou conquista."
-              />
-              {state.errors.content ? <p className="field-error">{state.errors.content}</p> : null}
-            </label>
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <p className={state.message && !state.ok ? "field-error" : "helper-text"}>
-                {state.message || `${content.length}/280 caracteres`}
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <p className={state.message && !state.ok ? "field-error" : "helper-text"}>
+                  {state.message || `${content.length}/280 caracteres`}
+                </p>
+                <button className="button-primary" type="submit" disabled={isPending}>
+                  {isPending ? "Publicando..." : "Publicar"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-4">
+              <p className="text-sm leading-6 text-[var(--muted)]">
+                O feed e publico para leitura. Para publicar, curtir, comentar ou adicionar amigos, entre na sua conta.
               </p>
-              <button className="button-primary" type="submit" disabled={isPending}>
-                {isPending ? "Publicando..." : "Publicar"}
-              </button>
+              <Link className="button-primary mt-4" href="/login?next=/feed">
+                Entrar para interagir
+              </Link>
             </div>
-          </form>
+          )}
         </div>
 
         {news.length === 0 ? (
@@ -256,19 +269,27 @@ export function PetFeed({ pets, news, errorMessage = "" }: PetFeedProps) {
                   </div>
 
                   <div className="mt-5 flex flex-wrap gap-3">
-                    <button
-                      className={liked ? "button-primary" : "button-secondary"}
-                      type="button"
-                      onClick={() => toggleLike(post.id)}
-                    >
-                      {liked ? "Curtido" : "Curtir"}
-                    </button>
-                    <button className="button-secondary" type="button">
-                      Comentar
-                    </button>
-                    <button className="button-secondary" type="button">
-                      Adicionar amigo
-                    </button>
+                    {isLoggedIn ? (
+                      <>
+                        <button
+                          className={liked ? "button-primary" : "button-secondary"}
+                          type="button"
+                          onClick={() => toggleLike(post.id)}
+                        >
+                          {liked ? "Curtido" : "Curtir"}
+                        </button>
+                        <button className="button-secondary" type="button">
+                          Comentar
+                        </button>
+                        <button className="button-secondary" type="button">
+                          Adicionar amigo
+                        </button>
+                      </>
+                    ) : (
+                      <Link className="button-secondary" href="/login?next=/feed">
+                        Entrar para interagir
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>

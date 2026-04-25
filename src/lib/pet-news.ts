@@ -196,6 +196,5 @@ export async function createPetNews(values: PetNewsFormValues) {
   return apiFetch("/pet-news", {
     method: "POST",
     body: JSON.stringify(toApiPayload(values)),
-    authenticated: false,
   });
 }
