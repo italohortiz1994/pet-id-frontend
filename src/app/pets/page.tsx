@@ -46,9 +46,9 @@ export default async function PetsPage(props: PetsPageProps) {
           <input className="field" name="q" defaultValue={q} placeholder="Buscar por nome ou raca" />
 
           <select className="field" name="gender" defaultValue={gender}>
-            <option className="bg-[#08111f]" value="">Todos os sexos</option>
-            <option className="bg-[#08111f]" value="M">Macho</option>
-            <option className="bg-[#08111f]" value="F">Fêmea</option>
+            <option value="">Todos os sexos</option>
+            <option value="M">Macho</option>
+            <option value="F">Fêmea</option>
           </select>
 
           <button className="button-secondary" type="submit">
