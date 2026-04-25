@@ -26,12 +26,43 @@ export default async function RootLayout({
               <Link href="/" className="text-lg font-semibold tracking-[0.2em] uppercase">
                 Pet ID
               </Link>
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                Front-end para consumir o back-end de cadastro de pets.
-              </p>
+              
             </div>
 
-            <details className="site-nav">
+            <nav className="desktop-nav site-nav-menu text-sm" aria-label="Menu principal">
+              <Link href="/" className="nav-link">
+                Dashboard
+              </Link>
+              <details className="nav-dropdown">
+                <summary className="nav-link nav-dropdown-trigger cursor-pointer list-none">
+                  Servicos
+                  <span aria-hidden="true" className="flex items-center justify-center">v</span>
+                </summary>
+                <div className="nav-dropdown-menu">
+                  <Link href="/pets">Pets cadastrados</Link>
+                  <Link href="/pets/new">Cadastrar pet</Link>
+                  <Link href="/veterinarios">Veterinarios</Link>
+                  <Link href="/veterinarios/new">Cadastrar veterinario</Link>
+                  <Link href="/tutores/new">Cadastrar tutor</Link>
+                </div>
+              </details>
+              {isLoggedIn ? (
+                <form action={logoutAction}>
+                  <button type="submit" className="nav-link nav-button">
+                    Sair
+                  </button>
+                </form>
+              ) : (
+                <Link href="/login" className="nav-link">
+                  Entrar
+                </Link>
+              )}
+              <Link href="/pets/new" className="nav-link nav-link--primary">
+                Novo pet
+              </Link>
+            </nav>
+
+            <details className="mobile-nav">
               <summary className="nav-link site-nav-trigger cursor-pointer list-none" aria-label="Abrir menu">
                 <span className="hamburger-icon" aria-hidden="true">
                   <span />
@@ -40,7 +71,7 @@ export default async function RootLayout({
                 </span>
                 <span className="sr-only">Menu</span>
               </summary>
-              <nav className="site-nav-menu text-sm">
+              <nav className="site-nav-menu text-sm" aria-label="Menu mobile">
                 <Link href="/" className="nav-link">
                   Dashboard
                 </Link>

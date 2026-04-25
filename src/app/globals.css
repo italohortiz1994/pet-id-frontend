@@ -94,7 +94,8 @@ code {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.site-nav {
+.mobile-nav {
+  display: none;
   position: relative;
   z-index: 1001;
 }
@@ -127,8 +128,14 @@ code {
   border: 0;
 }
 
-.site-nav summary::-webkit-details-marker {
+.mobile-nav summary::-webkit-details-marker {
   display: none;
+}
+
+.desktop-nav {
+  display: flex;
+  flex: 1;
+  justify-content: flex-end;
 }
 
 .site-nav-menu {
@@ -360,7 +367,12 @@ code {
     align-items: stretch;
   }
 
-  .site-nav {
+  .desktop-nav {
+    display: none;
+  }
+
+  .mobile-nav {
+    display: block;
     width: 100%;
   }
 
@@ -379,7 +391,7 @@ code {
     justify-content: flex-start;
   }
 
-  .site-nav[open] .site-nav-menu {
+  .mobile-nav[open] .site-nav-menu {
     display: flex;
   }
 
