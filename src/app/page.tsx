@@ -80,10 +80,13 @@ export default async function HomePage() {
                 <div>
                   <p className="text-lg font-medium">{pet.name}</p>
                   <p className="mt-1 text-sm text-[var(--muted)]">
-                    {pet.breed} {pet.age !== null ? `| ${pet.age} anos` : ""} {pet.gender ? `| ${pet.gender === "F" ? "Femea" : pet.gender === "M" ? "Macho" : pet.gender}` : ""}
+                    {pet.breed} {pet.age !== null ? `| ${pet.age} anos` : ""}{" "}
+                    {pet.gender ? `| ${pet.gender === "F" ? "Femea" : pet.gender === "M" ? "Macho" : pet.gender}` : ""}
                   </p>
                 </div>
-                <span className="status-pill">{pet.gender === "F" ? "Femea" : pet.gender === "M" ? "Macho" : pet.gender}</span>
+                <span className="status-pill">
+                  {pet.gender === "F" ? "Femea" : pet.gender === "M" ? "Macho" : pet.gender}
+                </span>
               </Link>
             ))}
 
