@@ -18,7 +18,7 @@ export default async function FeedPage() {
   }
 
   try {
-    news = await getPetNews({ page: 1, limit: 20 });
+    news = await getPetNews({ page: 1, limit: 20, published: true });
   } catch (error) {
     news = [];
     errorMessage = error instanceof Error ? error.message : "Nao foi possivel carregar o feed.";

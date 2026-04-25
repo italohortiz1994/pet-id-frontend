@@ -30,6 +30,7 @@ export type PetNewsQuery = {
   page?: number;
   limit?: number;
   q?: string;
+  published?: boolean;
 };
 
 function nestedRecord(value: unknown) {
@@ -99,13 +100,18 @@ function normalizePetNews(raw: RawRecord): PetNews {
   const title = pickFirstString(raw, ["title", "titulo", "headline", "name"]);
   const content = pickFirstString(raw, ["content", "body", "description", "descricao", "text", "message"]);
   const petName = pickFirstString(raw, ["petName", "pet_name", "pet.name", "pet.nome"]);
+  const images = Array.isArray(raw.images) ? raw.images : [];
+  const firstImage = images.find((item) => nestedRecord(item));
+  const firstImageRecord = nestedRecord(firstImage) ?? {};
 
   return {
     id: String(raw.id ?? raw._id ?? raw.petNewsId ?? Math.random().toString(36).slice(2)),
     title: title || "Atualizacao do pet",
     content: content || title || "Sem conteudo informado.",
     category: pickFirstString(raw, ["category", "tag", "type", "tipo"]) || "Novidade",
-    imageUrl: pickFirstString(raw, ["imageUrl", "image_url", "photoUrl", "photo_url", "coverUrl", "cover_url"]),
+    imageUrl:
+      pickFirstString(raw, ["imageUrl", "image_url", "photoUrl", "photo_url", "coverUrl", "cover_url"]) ||
+      pickFirstString(firstImageRecord, ["imageUrl", "image_url", "url"]),
     petId: pickFirstString(raw, ["petId", "pet_id", "pet.id", "pet._id"]),
     petName: petName || "Pet ID",
     petBreed: pickFirstString(raw, ["petBreed", "pet_breed", "pet.breed", "pet.raca"]),
@@ -129,6 +135,10 @@ function buildQueryString(query?: PetNewsQuery) {
 
   if (query?.q) {
     params.set("q", query.q);
+  }
+
+  if (query?.published !== undefined) {
+    params.set("published", String(query.published));
   }
 
   const queryString = params.toString();
@@ -185,10 +195,11 @@ export function validatePetNewsPayload(values: PetNewsFormValues) {
 function toApiPayload(values: PetNewsFormValues) {
   return {
     title: values.title,
+    summary: values.content.slice(0, 160),
     content: values.content,
     category: values.category,
     ...(values.imageUrl ? { imageUrl: values.imageUrl } : {}),
-    ...(values.petId ? { petId: Number.isNaN(Number(values.petId)) ? values.petId : Number(values.petId) } : {}),
+    ...(values.petId ? { petId: values.petId } : {}),
   };
 }
 
