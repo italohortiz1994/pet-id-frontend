@@ -49,7 +49,7 @@ async function readErrorMessage(response: Response) {
   const text = await response.text();
 
   if (!text.trim()) {
-    return `Falha ao consumir a API (${response.status}).`;
+    return `Falha ao consumir a API (${response.status} ${response.statusText || "sem detalhes"}).`;
   }
 
   try {

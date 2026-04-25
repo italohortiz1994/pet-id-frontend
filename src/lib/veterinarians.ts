@@ -84,6 +84,10 @@ function pickFirstString(source: RawRecord, paths: string[]) {
     if (typeof current === "string" && current.trim()) {
       return current;
     }
+
+    if (typeof current === "number" && Number.isFinite(current)) {
+      return String(current);
+    }
   }
 
   return "";
@@ -236,6 +240,10 @@ export function validateVeterinarianPayload(values: VeterinarianFormValues) {
     errors.crmv = "Informe o CRMV.";
   }
 
+  if (!values.email) {
+    errors.email = "Informe o e-mail.";
+  }
+
   if (!values.specialty) {
     errors.specialty = "Informe a especialidade.";
   }
@@ -243,18 +251,36 @@ export function validateVeterinarianPayload(values: VeterinarianFormValues) {
   return errors;
 }
 
+function nullableString(value: string) {
+  return value.trim() || null;
+}
+
+function toApiPayload(values: VeterinarianFormValues) {
+  return {
+    name: values.name,
+    email: values.email,
+    crmv: values.crmv,
+    specialty: values.specialty || "Clinica geral",
+    clinicName: nullableString(values.clinicName),
+    phone: nullableString(values.phone),
+    address: nullableString(values.address),
+    status: values.status || "active",
+    notes: nullableString(values.notes),
+  };
+}
+
 export async function createVeterinarian(values: VeterinarianFormValues) {
   return veterinarianApiFetch("/vets", {
     method: "POST",
     authenticated: false,
-    body: JSON.stringify(values),
+    body: JSON.stringify(toApiPayload(values)),
   });
 }
 
 export async function updateVeterinarian(id: string, values: VeterinarianFormValues) {
   return veterinarianApiFetch(`/vets/${id}`, {
     method: "PUT",
-    body: JSON.stringify(values),
+    body: JSON.stringify(toApiPayload(values)),
   });
 }
 

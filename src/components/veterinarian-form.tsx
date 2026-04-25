@@ -70,7 +70,14 @@ export function VeterinarianForm({
 
           <label>
             <span className="field-label">E-mail</span>
-            <input className="field" name="email" defaultValue={initialValues.email} placeholder="Ex.: contato@clinica.com" />
+            <input
+              className="field"
+              name="email"
+              type="email"
+              defaultValue={initialValues.email}
+              placeholder="Ex.: contato@clinica.com"
+            />
+            {state.errors.email ? <p className="field-error">{state.errors.email}</p> : null}
           </label>
 
           <label>

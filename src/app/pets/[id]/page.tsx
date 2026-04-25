@@ -16,6 +16,7 @@ export default async function PetDetailsPage(props: PetDetailsPageProps) {
   let pet;
   let identity: PetIdentity | null = null;
   let identityError = "";
+  let petError = "";
 
   try {
     pet = await getPet(id);
@@ -24,7 +25,22 @@ export default async function PetDetailsPage(props: PetDetailsPageProps) {
       notFound();
     }
 
-    throw error;
+    petError = error instanceof Error ? error.message : "Nao foi possivel carregar os dados do pet.";
+  }
+
+  if (!pet) {
+    return (
+      <div className="glass-panel px-6 py-12 text-center">
+        <span className="eyebrow">Erro da API</span>
+        <h1 className="mt-3 text-3xl font-semibold">Nao foi possivel carregar o pet</h1>
+        <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">{petError}</p>
+        <div className="mt-6 flex justify-center">
+          <Link href="/pets" className="button-primary">
+            Voltar para pets
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   try {
@@ -79,7 +95,7 @@ export default async function PetDetailsPage(props: PetDetailsPageProps) {
         <div className="glass-panel px-6 py-6">
           <div className="grid gap-5 md:grid-cols-2">
             <article>
-              <p className="helper-text">Raca</p>
+              <p className="helper-text">Raça</p>
               <p className="mt-2 text-lg font-medium">{pet.breed}</p>
             </article>
             <article>
@@ -93,7 +109,7 @@ export default async function PetDetailsPage(props: PetDetailsPageProps) {
               <p className="mt-2 text-lg font-medium">{formatAge(pet.age)}</p>
             </article>
             <article>
-              <p className="helper-text">Tutor / usuario</p>
+              <p className="helper-text">Tutor / usuário</p>
               <p className="mt-2 text-lg font-medium">{pet.ownerId || "Vinculado pelo token de acesso"}</p>
             </article>
             <article>

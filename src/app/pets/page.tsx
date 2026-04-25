@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getPets } from "@/lib/pets";
+import { ApiError } from "@/lib/api";
+import { getPets, type Pet } from "@/lib/pets";
 
 type PetsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -9,7 +10,19 @@ export default async function PetsPage(props: PetsPageProps) {
   const searchParams = await props.searchParams;
   const q = typeof searchParams.q === "string" ? searchParams.q : "";
   const gender = typeof searchParams.gender === "string" ? searchParams.gender : "";
-  const pets = await getPets({ q, gender });
+  let pets: Pet[] = [];
+  let petsError = "";
+
+  try {
+    pets = await getPets({ q, gender });
+  } catch (error) {
+    petsError =
+      error instanceof ApiError
+        ? `${error.message} (status ${error.status})`
+        : error instanceof Error
+          ? error.message
+          : "Nao foi possivel carregar os pets.";
+  }
 
   return (
     <div className="space-y-5">
@@ -35,7 +48,7 @@ export default async function PetsPage(props: PetsPageProps) {
           <select className="field" name="gender" defaultValue={gender}>
             <option className="bg-[#08111f]" value="">Todos os sexos</option>
             <option className="bg-[#08111f]" value="M">Macho</option>
-            <option className="bg-[#08111f]" value="F">Femea</option>
+            <option className="bg-[#08111f]" value="F">Fêmea</option>
           </select>
 
           <button className="button-secondary" type="submit">
@@ -45,7 +58,11 @@ export default async function PetsPage(props: PetsPageProps) {
       </section>
 
       <section className="glass-panel pet-table">
-        {pets.length === 0 ? (
+        {petsError ? (
+          <div className="px-6 py-12 text-center text-sm text-amber-100">
+            {petsError}
+          </div>
+        ) : pets.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-[var(--muted)]">
             Nenhum pet encontrado para os filtros informados.
           </div>
@@ -57,7 +74,7 @@ export default async function PetsPage(props: PetsPageProps) {
                   <th>Pet</th>
                   <th>Idade</th>
                   <th>Sexo</th>
-                  <th>Acao</th>
+                  <th>Ação</th>
                 </tr>
               </thead>
               <tbody>

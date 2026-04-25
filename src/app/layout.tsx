@@ -35,14 +35,14 @@ export default async function RootLayout({
               </Link>
               <details className="nav-dropdown">
                 <summary className="nav-link nav-dropdown-trigger cursor-pointer list-none">
-                  Servicos
+                  Serviços
                   <span aria-hidden="true" className="flex items-center justify-center">v</span>
                 </summary>
                 <div className="nav-dropdown-menu">
                   <Link href="/pets">Pets cadastrados</Link>
                   <Link href="/pets/new">Cadastrar pet</Link>
-                  <Link href="/veterinarios">Veterinarios</Link>
-                  <Link href="/veterinarios/new">Cadastrar veterinario</Link>
+                  <Link href="/veterinarios">Veterinários</Link>
+                  <Link href="/veterinarios/new">Cadastrar veterinário</Link>
                   <Link href="/tutores/new">Cadastrar tutor</Link>
                 </div>
               </details>
