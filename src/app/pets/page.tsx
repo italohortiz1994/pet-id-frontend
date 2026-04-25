@@ -44,54 +44,44 @@ export default async function PetsPage(props: PetsPageProps) {
         </form>
       </section>
 
-      <section className="glass-panel responsive-table">
-        <div className="responsive-table__header gap-px bg-white/10 md:grid-cols-[1.3fr_0.9fr_0.8fr_0.6fr]">
-          <div className="bg-[var(--panel-strong)] px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-            Pet
-          </div>
-          <div className="bg-[var(--panel-strong)] px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-            Idade
-          </div>
-          <div className="bg-[var(--panel-strong)] px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-            Sexo
-          </div>
-          <div className="bg-[var(--panel-strong)] px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-            Acao
-          </div>
-        </div>
-
+      <section className="glass-panel pet-table">
         {pets.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-[var(--muted)]">
             Nenhum pet encontrado para os filtros informados.
           </div>
         ) : (
-          <div className="responsive-table__body divide-y divide-white/10">
-            {pets.map((pet) => (
-              <div
-                key={pet.id}
-                className="responsive-table__row grid grid-cols-1 gap-3 px-5 py-5 md:grid-cols-[1.3fr_0.9fr_0.8fr_0.6fr] md:items-center"
-              >
-                <div>
-                  <span className="responsive-table__cell-label">Pet</span>
-                  <p className="font-medium">{pet.name}</p>
-                  <p className="mt-1 text-sm text-[var(--muted)]">{pet.breed}</p>
-                </div>
-                <div>
-                  <span className="responsive-table__cell-label">Idade</span>
-                  <p className="text-sm text-[var(--muted)]">{pet.age ?? "Nao informada"}</p>
-                </div>
-                <div>
-                  <span className="responsive-table__cell-label">Sexo</span>
-                  <span className="status-pill">{pet.gender === "F" ? "Femea" : pet.gender === "M" ? "Macho" : pet.gender}</span>
-                </div>
-                <div>
-                  <span className="responsive-table__cell-label">Acao</span>
-                  <Link href={`/pets/${pet.id}`} className="text-sm font-medium text-[var(--accent-2)]">
-                    Ver detalhes
-                  </Link>
-                </div>
-              </div>
-            ))}
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Pet</th>
+                  <th>Idade</th>
+                  <th>Sexo</th>
+                  <th>Acao</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pets.map((pet) => (
+                  <tr key={pet.id}>
+                    <td>
+                      <p className="font-medium">{pet.name}</p>
+                      <p className="mt-1 text-sm text-[var(--muted)]">{pet.breed}</p>
+                    </td>
+                    <td className="text-sm text-[var(--muted)]">{pet.age ?? "Nao informada"}</td>
+                    <td>
+                      <span className="status-pill">
+                        {pet.gender === "F" ? "Femea" : pet.gender === "M" ? "Macho" : pet.gender}
+                      </span>
+                    </td>
+                    <td>
+                      <Link href={`/pets/${pet.id}`} className="text-sm font-medium text-[var(--accent-2)]">
+                        Ver detalhes
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>
