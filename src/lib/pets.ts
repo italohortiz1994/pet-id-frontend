@@ -306,8 +306,7 @@ export function getPetFormValues(pet: Pet): PetFormValues {
 }
 
 export async function getPets(filters?: PetFilters) {
-  const payload = await apiFetch<unknown>("/pets");
-  let pets = unwrapList(payload).map((item) => normalizePet((item ?? {}) as RawRecord));
+  let pets = await getAllPets();
   const currentUserId = await getCurrentUserId();
   const ownedPetIds = await getOwnedPetIds();
 
@@ -330,6 +329,11 @@ export async function getPets(filters?: PetFilters) {
   }
 
   return pets.sort((a, b) => Number(b.id) - Number(a.id));
+}
+
+export async function getAllPets() {
+  const payload = await apiFetch<unknown>("/pets");
+  return unwrapList(payload).map((item) => normalizePet((item ?? {}) as RawRecord));
 }
 
 export async function getPet(id: string) {

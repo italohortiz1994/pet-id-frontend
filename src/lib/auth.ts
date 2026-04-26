@@ -82,7 +82,7 @@ export function getEmptyLoginValues(overrides?: Partial<LoginFormValues>) {
 
 export function serializeLoginFormData(formData: FormData): LoginFormValues {
   return {
-    email: stringValue(formData.get("email")).trim(),
+    email: stringValue(formData.get("email")).trim().toLowerCase(),
     password: stringValue(formData.get("password")).trim(),
   };
 }

@@ -2,8 +2,16 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { createPetNewsAction, type PetNewsFormState } from "@/app/feed/actions";
+import {
+  createPetCommentAction,
+  createPetFriendshipAction,
+  createPetNewsAction,
+  likePetNewsAction,
+  type FeedInteractionState,
+  type PetNewsFormState,
+} from "@/app/feed/actions";
 import type { PetNews } from "@/lib/pet-news";
+import type { FriendSuggestion, PetComment } from "@/lib/pet-social";
 import type { Pet } from "@/lib/pets";
 
 type FriendPet = {
@@ -16,6 +24,8 @@ type FriendPet = {
 type PetFeedProps = {
   pets: Pet[];
   news: PetNews[];
+  commentsByNewsId: Record<string, PetComment[]>;
+  friendSuggestions: FriendSuggestion[];
   errorMessage?: string;
   isLoggedIn: boolean;
 };
@@ -62,6 +72,11 @@ const initialFormState: PetNewsFormState = {
   ok: false,
 };
 
+const initialInteractionState: FeedInteractionState = {
+  message: "",
+  ok: false,
+};
+
 function initials(name: string) {
   return name
     .split(" ")
@@ -97,10 +112,132 @@ function formatNewsDate(value: string) {
   }).format(date);
 }
 
-export function PetFeed({ pets, news, errorMessage = "", isLoggedIn }: PetFeedProps) {
+function CommentForm({ newsId, pets }: { newsId: string; pets: Pet[] }) {
+  const [state, action, isPending] = useActionState(createPetCommentAction, initialInteractionState);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (state.ok) {
+      formRef.current?.reset();
+    }
+  }, [state.ok]);
+
+  return (
+    <form ref={formRef} action={action} className="mt-4 rounded-3xl border border-white/10 bg-white/5 p-4">
+      <input type="hidden" name="newsId" value={newsId} />
+      <div className="grid gap-3 md:grid-cols-[0.45fr_1fr_auto]">
+        <label>
+          <span className="field-label">Comentar como</span>
+          <select className="field" name="petId" defaultValue="">
+            <option value="">Meu usuario</option>
+            {pets.map((pet) => (
+              <option key={pet.id} value={pet.id}>
+                {pet.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span className="field-label">Comentario</span>
+          <input className="field" name="content" placeholder="Escreva uma resposta..." />
+        </label>
+        <button className="button-primary self-end" type="submit" disabled={isPending}>
+          {isPending ? "Enviando..." : "Enviar"}
+        </button>
+      </div>
+      {state.message ? (
+        <p className={state.ok ? "helper-text mt-3" : "field-error"}>{state.message}</p>
+      ) : null}
+    </form>
+  );
+}
+
+function FriendRequestForm({
+  targetPetId,
+  pets,
+}: {
+  targetPetId: string;
+  pets: Pet[];
+}) {
+  const [state, action, isPending] = useActionState(createPetFriendshipAction, initialInteractionState);
+  const availablePets = pets.filter((pet) => pet.id !== targetPetId);
+
+  if (!targetPetId) {
+    return <p className="helper-text mt-3">Esta publicacao nao esta vinculada a um pet.</p>;
+  }
+
+  if (availablePets.length === 0) {
+    return <p className="helper-text mt-3">Cadastre ou selecione outro pet para enviar convites.</p>;
+  }
+
+  return (
+    <form action={action} className="mt-4 flex flex-wrap items-end gap-3">
+      <input type="hidden" name="addresseePetId" value={targetPetId} />
+      <label className="min-w-52 flex-1">
+        <span className="field-label">Enviar convite como</span>
+        <select className="field" name="requesterPetId" defaultValue={availablePets[0]?.id ?? ""}>
+          {availablePets.map((pet) => (
+            <option key={pet.id} value={pet.id}>
+              {pet.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button className="button-primary" type="submit" disabled={isPending}>
+        {isPending ? "Enviando..." : "Enviar convite"}
+      </button>
+      {state.message ? (
+        <p className={state.ok ? "helper-text basis-full" : "field-error basis-full"}>{state.message}</p>
+      ) : null}
+    </form>
+  );
+}
+
+function LikeForm({ newsId }: { newsId: string }) {
+  const [state, action, isPending] = useActionState(likePetNewsAction, initialInteractionState);
+
+  return (
+    <form action={action}>
+      <input type="hidden" name="newsId" value={newsId} />
+      <button className="button-secondary" type="submit" disabled={isPending}>
+        {isPending ? "Curtindo..." : "Curtir"}
+      </button>
+      {state.message && !state.ok ? <p className="field-error mt-2">{state.message}</p> : null}
+    </form>
+  );
+}
+
+function SuggestionRequestForm({ suggestion }: { suggestion: FriendSuggestion }) {
+  const [state, action, isPending] = useActionState(createPetFriendshipAction, initialInteractionState);
+
+  if (!suggestion.canRequest) {
+    return <p className="helper-text mt-3">Sem pets disponiveis para enviar convite.</p>;
+  }
+
+  return (
+    <form action={action} className="mt-3">
+      <input type="hidden" name="requesterPetId" value={suggestion.requesterPetId} />
+      <input type="hidden" name="addresseePetId" value={suggestion.addresseePetId} />
+      <button className="button-primary" type="submit" disabled={isPending}>
+        {isPending ? "Enviando..." : "Adicionar amigo"}
+      </button>
+      {state.message ? (
+        <p className={state.ok ? "helper-text mt-2" : "field-error mt-2"}>{state.message}</p>
+      ) : null}
+    </form>
+  );
+}
+
+export function PetFeed({
+  pets,
+  news,
+  commentsByNewsId,
+  friendSuggestions,
+  errorMessage = "",
+  isLoggedIn,
+}: PetFeedProps) {
   const sourcePets = pets.length > 0 ? pets : fallbackPets;
   const friends = useMemo(() => buildFriends(sourcePets), [sourcePets]);
-  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
   const [content, setContent] = useState("");
   const [state, formAction, isPending] = useActionState(createPetNewsAction, initialFormState);
   const formRef = useRef<HTMLFormElement>(null);
@@ -110,13 +247,6 @@ export function PetFeed({ pets, news, errorMessage = "", isLoggedIn }: PetFeedPr
       formRef.current?.reset();
     }
   }, [state.ok]);
-
-  function toggleLike(postId: string) {
-    setLikedPosts((current) => ({
-      ...current,
-      [postId]: !current[postId],
-    }));
-  }
 
   return (
     <div className="grid gap-5 xl:grid-cols-[1fr_0.38fr]">
@@ -223,8 +353,7 @@ export function PetFeed({ pets, news, errorMessage = "", isLoggedIn }: PetFeedPr
         ) : null}
 
         {news.map((post) => {
-          const liked = Boolean(likedPosts[post.id]);
-          const likeCount = liked ? post.likes + 1 : post.likes;
+          const comments = commentsByNewsId[post.id] ?? [];
 
           return (
             <article key={post.id} className="glass-panel px-6 py-6">
@@ -256,33 +385,24 @@ export function PetFeed({ pets, news, errorMessage = "", isLoggedIn }: PetFeedPr
                   <div className="mt-5 grid gap-3 sm:grid-cols-3">
                     <div className="feed-stat">
                       <span>Curtidas</span>
-                      <strong>{likeCount}</strong>
+                      <strong>{post.likes}</strong>
                     </div>
                     <div className="feed-stat">
                       <span>Comentarios</span>
-                      <strong>{post.comments}</strong>
+                      <strong>{comments.length || post.comments}</strong>
                     </div>
                     <div className="feed-stat">
                       <span>Alcance</span>
-                      <strong>{120 + likeCount * 3}</strong>
+                      <strong>{post.likes * 3}</strong>
                     </div>
                   </div>
 
                   <div className="mt-5 flex flex-wrap gap-3">
                     {isLoggedIn ? (
                       <>
-                        <button
-                          className={liked ? "button-primary" : "button-secondary"}
-                          type="button"
-                          onClick={() => toggleLike(post.id)}
-                        >
-                          {liked ? "Curtido" : "Curtir"}
-                        </button>
+                        <LikeForm newsId={post.id} />
                         <button className="button-secondary" type="button">
                           Comentar
-                        </button>
-                        <button className="button-secondary" type="button">
-                          Adicionar amigo
                         </button>
                       </>
                     ) : (
@@ -291,6 +411,26 @@ export function PetFeed({ pets, news, errorMessage = "", isLoggedIn }: PetFeedPr
                       </Link>
                     )}
                   </div>
+
+                  {comments.length > 0 ? (
+                    <div className="mt-5 space-y-3">
+                      {comments.map((comment) => (
+                        <article key={comment.id} className="rounded-3xl border border-white/10 bg-white/5 p-4">
+                          <p className="text-sm font-semibold">
+                            {comment.petName || comment.authorName}
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-slate-100">{comment.content}</p>
+                        </article>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {isLoggedIn ? (
+                    <>
+                      <CommentForm newsId={post.id} pets={pets} />
+                      <FriendRequestForm targetPetId={post.petId} pets={pets} />
+                    </>
+                  ) : null}
                 </div>
               </div>
             </article>
@@ -300,19 +440,43 @@ export function PetFeed({ pets, news, errorMessage = "", isLoggedIn }: PetFeedPr
 
       <aside className="space-y-5">
         <section className="glass-panel px-6 py-6">
-          <span className="eyebrow">Amigos pets</span>
+          <span className="eyebrow">Sugestoes</span>
           <h2 className="mt-3 text-xl font-semibold">Sugestoes</h2>
           <div className="mt-5 space-y-4">
-            {friends.map((friend) => (
-              <article key={friend.id} className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 p-4">
-                <div className="feed-avatar feed-avatar--small">{initials(friend.name)}</div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold">{friend.name}</p>
-                  <p className="truncate text-sm text-[var(--muted)]">{friend.breed}</p>
-                  <p className="mt-1 text-xs text-[var(--accent-2)]">{friend.status}</p>
-                </div>
-              </article>
-            ))}
+            {isLoggedIn && friendSuggestions.length === 0 ? (
+              <p className="text-sm leading-6 text-[var(--muted)]">
+                Nenhuma sugestao disponivel para os seus pets agora.
+              </p>
+            ) : null}
+            {isLoggedIn
+              ? friendSuggestions.map((suggestion) => (
+                  <article key={suggestion.userId} className="rounded-3xl border border-white/10 bg-white/5 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="feed-avatar feed-avatar--small">{initials(suggestion.userName)}</div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold">{suggestion.userName}</p>
+                        <p className="truncate text-sm text-[var(--muted)]">{suggestion.userEmail}</p>
+                        <p className="mt-1 text-xs text-[var(--accent-2)]">
+                          {suggestion.friendsCount} amigos adicionados
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--muted)]">
+                          {suggestion.pets.length} pets cadastrados
+                        </p>
+                      </div>
+                    </div>
+                    <SuggestionRequestForm suggestion={suggestion} />
+                  </article>
+                ))
+              : friends.map((friend) => (
+                  <article key={friend.id} className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 p-4">
+                    <div className="feed-avatar feed-avatar--small">{initials(friend.name)}</div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold">{friend.name}</p>
+                      <p className="truncate text-sm text-[var(--muted)]">{friend.breed}</p>
+                      <p className="mt-1 text-xs text-[var(--accent-2)]">{friend.status}</p>
+                    </div>
+                  </article>
+                ))}
           </div>
         </section>
 
