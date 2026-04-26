@@ -152,47 +152,6 @@ function CommentForm({ newsId, pets }: { newsId: string; pets: Pet[] }) {
   );
 }
 
-function FriendRequestForm({
-  targetPetId,
-  pets,
-}: {
-  targetPetId: string;
-  pets: Pet[];
-}) {
-  const [state, action, isPending] = useActionState(createPetFriendshipAction, initialInteractionState);
-  const availablePets = pets.filter((pet) => pet.id !== targetPetId);
-
-  if (!targetPetId) {
-    return <p className="helper-text mt-3">Esta publicacao nao esta vinculada a um pet.</p>;
-  }
-
-  if (availablePets.length === 0) {
-    return <p className="helper-text mt-3">Cadastre ou selecione outro pet para enviar convites.</p>;
-  }
-
-  return (
-    <form action={action} className="mt-4 flex flex-wrap items-end gap-3">
-      <input type="hidden" name="addresseePetId" value={targetPetId} />
-      <label className="min-w-52 flex-1">
-        <span className="field-label">Enviar convite como</span>
-        <select className="field" name="requesterPetId" defaultValue={availablePets[0]?.id ?? ""}>
-          {availablePets.map((pet) => (
-            <option key={pet.id} value={pet.id}>
-              {pet.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <button className="button-primary" type="submit" disabled={isPending}>
-        {isPending ? "Enviando..." : "Enviar convite"}
-      </button>
-      {state.message ? (
-        <p className={state.ok ? "helper-text basis-full" : "field-error basis-full"}>{state.message}</p>
-      ) : null}
-    </form>
-  );
-}
-
 function LikeForm({ newsId }: { newsId: string }) {
   const [state, action, isPending] = useActionState(likePetNewsAction, initialInteractionState);
 
@@ -428,7 +387,6 @@ export function PetFeed({
                   {isLoggedIn ? (
                     <>
                       <CommentForm newsId={post.id} pets={pets} />
-                      <FriendRequestForm targetPetId={post.petId} pets={pets} />
                     </>
                   ) : null}
                 </div>
@@ -441,7 +399,10 @@ export function PetFeed({
       <aside className="space-y-5">
         <section className="glass-panel px-6 py-6">
           <span className="eyebrow">Sugestoes</span>
-          <h2 className="mt-3 text-xl font-semibold">Sugestoes</h2>
+          <h2 className="mt-3 text-xl font-semibold">Novas amizades</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            Envie convites pelos cards de usuarios e pets cadastrados.
+          </p>
           <div className="mt-5 space-y-4">
             {isLoggedIn && friendSuggestions.length === 0 ? (
               <p className="text-sm leading-6 text-[var(--muted)]">
