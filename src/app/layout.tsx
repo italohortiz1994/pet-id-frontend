@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { logoutAction } from "@/app/logout/actions";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { getSessionToken } from "@/lib/api";
 import "./globals.css";
 
@@ -8,6 +9,15 @@ export const metadata: Metadata = {
   title: "Pet ID",
   description: "Painel para cadastro, consulta e manutencao de pets.",
 };
+
+const themeScript = `
+  try {
+    var theme = window.localStorage.getItem("pet-id-theme");
+    var isLight = theme === "light";
+    document.documentElement.dataset.theme = isLight ? "light" : "dark";
+    document.documentElement.classList.toggle("theme-light", isLight);
+  } catch {}
+`;
 
 export default async function RootLayout({
   children,
@@ -17,7 +27,10 @@ export default async function RootLayout({
   const isLoggedIn = Boolean(await getSessionToken());
 
   return (
-    <html lang="pt-BR" className="h-full antialiased">
+    <html lang="pt-BR" className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full">
         <div className="aurora" aria-hidden="true" />
         <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
@@ -62,6 +75,7 @@ export default async function RootLayout({
               <Link href="/pets/new" className="nav-link nav-link--primary">
                 Novo pet
               </Link>
+              <ThemeToggle />
             </nav>
 
             <details className="mobile-nav">
@@ -106,6 +120,7 @@ export default async function RootLayout({
                 <Link href="/pets/new" className="nav-link nav-link--primary">
                   Novo pet
                 </Link>
+                <ThemeToggle />
               </nav>
             </details>
           </header>

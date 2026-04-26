@@ -156,6 +156,19 @@ export async function likePetNews(newsId: string) {
   });
 }
 
+export async function getFriendshipScopePetIds(myPets: Pet[]) {
+  const petIds = new Set(myPets.map((pet) => pet.id));
+  const allPets = await getAllPets();
+
+  for (const pet of allPets) {
+    if (!pet.ownerId) {
+      petIds.add(pet.id);
+    }
+  }
+
+  return petIds;
+}
+
 export async function getFriendSuggestions(myPets: Pet[]) {
   const currentUserId = await getCurrentUserId();
   const [usersPayload, allPets, friendships] = await Promise.all([

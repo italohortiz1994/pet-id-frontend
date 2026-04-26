@@ -7,6 +7,7 @@ import {
   getHealthRecordsByPet,
   getVaccinesByPet,
 } from "@/lib/health-records";
+import { getVeterinarians } from "@/lib/veterinarians";
 import { createVaccineAction } from "./actions";
 import { initialVaccineFormState } from "./form-state";
 
@@ -16,10 +17,11 @@ type PetHealthPageProps = {
 
 export default async function PetHealthPage(props: PetHealthPageProps) {
   const { id } = await props.params;
-  const [pet, vaccines, records] = await Promise.all([
+  const [pet, vaccines, records, veterinarians] = await Promise.all([
     getPet(id),
     getVaccinesByPet(id),
     getHealthRecordsByPet(id),
+    getVeterinarians().catch(() => []),
   ]);
   const vaccineAction = createVaccineAction.bind(null, pet.id);
 
@@ -49,6 +51,7 @@ export default async function PetHealthPage(props: PetHealthPageProps) {
             action={vaccineAction}
             initialState={initialVaccineFormState}
             initialValues={getEmptyVaccineValues(pet.id)}
+            veterinarians={veterinarians}
           />
         </section>
 

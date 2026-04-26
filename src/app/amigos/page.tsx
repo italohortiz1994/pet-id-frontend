@@ -4,6 +4,7 @@ import { FriendSuggestionsList } from "@/components/friend-suggestions-list";
 import { getPets, type Pet } from "@/lib/pets";
 import {
   getFriendSuggestions,
+  getFriendshipScopePetIds,
   getPetFriendships,
   type FriendSuggestion,
   type PetFriendship,
@@ -135,14 +136,14 @@ export default async function AmigosPage() {
   }
 
   try {
-    const ownedPetIds = new Set(pets.map((pet) => pet.id));
+    const visiblePetIds = await getFriendshipScopePetIds(pets);
     const results = await getPetFriendships();
     const byId = new Map<string, PetFriendship>();
 
     for (const friendship of results) {
       if (
-        ownedPetIds.has(friendship.requesterPetId) ||
-        ownedPetIds.has(friendship.addresseePetId)
+        visiblePetIds.has(friendship.requesterPetId) ||
+        visiblePetIds.has(friendship.addresseePetId)
       ) {
         byId.set(friendship.id, friendship);
       }
@@ -159,7 +160,7 @@ export default async function AmigosPage() {
     friendSuggestions = [];
   }
 
-  const ownedPetIds = new Set(pets.map((pet) => pet.id));
+  const ownedPetIds = await getFriendshipScopePetIds(pets);
   const pendingReceived = friendships.filter((friendship) => {
     return friendship.status === "pending" && ownedPetIds.has(friendship.addresseePetId);
   });

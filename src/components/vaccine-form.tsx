@@ -1,18 +1,40 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import type { VaccineFormValues } from "@/lib/health-records";
+import type { Veterinarian } from "@/lib/veterinarians";
 import type { VaccineFormState } from "@/app/pets/[id]/health/actions";
 import { SubmitButton } from "./submit-button";
+
+const vaccineOptions = [
+  "Antirrabica",
+  "V8",
+  "V10",
+  "V11",
+  "Giardia",
+  "Gripe canina",
+  "Leishmaniose",
+  "Multipla felina V3",
+  "Multipla felina V4",
+  "Multipla felina V5",
+  "FeLV",
+  "Bordetella",
+];
 
 type VaccineFormProps = {
   action: (state: VaccineFormState, formData: FormData) => Promise<VaccineFormState>;
   initialValues: VaccineFormValues;
   initialState: VaccineFormState;
+  veterinarians: Veterinarian[];
 };
 
-export function VaccineForm({ action, initialValues, initialState }: VaccineFormProps) {
+export function VaccineForm({ action, initialValues, initialState, veterinarians }: VaccineFormProps) {
   const [state, formAction] = useActionState(action, initialState);
+  const [selectedVeterinarianName, setSelectedVeterinarianName] = useState(initialValues.veterinarianName);
+  const selectedVeterinarian = useMemo(() => {
+    return veterinarians.find((veterinarian) => veterinarian.name === selectedVeterinarianName);
+  }, [selectedVeterinarianName, veterinarians]);
+  const clinicName = selectedVeterinarian?.clinicName ?? initialValues.clinicName;
 
   return (
     <form action={formAction} className="mt-6 space-y-5">
@@ -21,7 +43,17 @@ export function VaccineForm({ action, initialValues, initialState }: VaccineForm
       <div className="grid gap-5 md:grid-cols-2">
         <label>
           <span className="field-label">Vacina</span>
-          <input className="field" name="name" defaultValue={initialValues.name} placeholder="Ex.: Antirrabica" />
+          <select className="field" name="name" defaultValue={initialValues.name}>
+            <option value="">Selecione uma vacina</option>
+            {initialValues.name && !vaccineOptions.includes(initialValues.name) ? (
+              <option value={initialValues.name}>{initialValues.name}</option>
+            ) : null}
+            {vaccineOptions.map((vaccine) => (
+              <option key={vaccine} value={vaccine}>
+                {vaccine}
+              </option>
+            ))}
+          </select>
           {state.errors.name ? <p className="field-error">{state.errors.name}</p> : null}
         </label>
 
@@ -38,22 +70,35 @@ export function VaccineForm({ action, initialValues, initialState }: VaccineForm
 
         <label>
           <span className="field-label">Veterinario</span>
-          <input
+          <select
             className="field"
             name="veterinarianName"
-            defaultValue={initialValues.veterinarianName}
-            placeholder="Ex.: Dra. Ana Souza"
-          />
+            value={selectedVeterinarianName}
+            onChange={(event) => setSelectedVeterinarianName(event.target.value)}
+          >
+            <option value="">Selecione um veterinario</option>
+            {initialValues.veterinarianName &&
+            !veterinarians.some((veterinarian) => veterinarian.name === initialValues.veterinarianName) ? (
+              <option value={initialValues.veterinarianName}>{initialValues.veterinarianName}</option>
+            ) : null}
+            {veterinarians.map((veterinarian) => (
+              <option key={veterinarian.id} value={veterinarian.name}>
+                {veterinarian.name}
+                {veterinarian.crmv ? ` - CRMV ${veterinarian.crmv}` : ""}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label>
           <span className="field-label">Clinica</span>
           <input
             className="field"
-            name="clinicName"
-            defaultValue={initialValues.clinicName}
+            value={clinicName}
             placeholder="Ex.: Clinica Pet Vida"
+            readOnly
           />
+          <input type="hidden" name="clinicName" value={clinicName} />
         </label>
       </div>
 
