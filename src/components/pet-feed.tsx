@@ -166,10 +166,28 @@ function LikeForm({ newsId }: { newsId: string }) {
   );
 }
 
-function SuggestionRequestForm({ suggestion }: { suggestion: FriendSuggestion }) {
+function SuggestionRequestForm({ suggestion, hasPets }: { suggestion: FriendSuggestion; hasPets: boolean }) {
   const [state, action, isPending] = useActionState(createPetFriendshipAction, initialInteractionState);
 
+  if (!hasPets) {
+    return (
+      <Link className="button-primary mt-3" href="/pets/new">
+        Cadastrar pet
+      </Link>
+    );
+  }
+
   if (!suggestion.canRequest) {
+    const status = suggestion.friendshipStatus.toLowerCase();
+
+    if (status === "pending") {
+      return <p className="helper-text mt-3">Solicitacao pendente.</p>;
+    }
+
+    if (status === "accepted") {
+      return <p className="helper-text mt-3">Amizade aceita.</p>;
+    }
+
     return <p className="helper-text mt-3">Sem pets disponiveis para enviar convite.</p>;
   }
 
@@ -177,9 +195,12 @@ function SuggestionRequestForm({ suggestion }: { suggestion: FriendSuggestion })
     <form action={action} className="mt-3">
       <input type="hidden" name="requesterPetId" value={suggestion.requesterPetId} />
       <input type="hidden" name="addresseePetId" value={suggestion.addresseePetId} />
-      <button className="button-primary" type="submit" disabled={isPending}>
-        {isPending ? "Enviando..." : "Adicionar amigo"}
+      <button className="button-primary w-full" type="submit" disabled={isPending}>
+        {isPending ? "Enviando..." : "Enviar amizade"}
       </button>
+      {suggestion.targetPetName ? (
+        <p className="helper-text mt-2">Convite para {suggestion.targetPetName}.</p>
+      ) : null}
       {state.message ? (
         <p className={state.ok ? "helper-text mt-2" : "field-error mt-2"}>{state.message}</p>
       ) : null}
@@ -405,9 +426,18 @@ export function PetFeed({
           </p>
           <div className="mt-5 space-y-4">
             {isLoggedIn && friendSuggestions.length === 0 ? (
-              <p className="text-sm leading-6 text-[var(--muted)]">
-                Nenhuma sugestao disponivel para os seus pets agora.
-              </p>
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm leading-6 text-[var(--muted)]">
+                  {pets.length === 0
+                    ? "Cadastre um pet para enviar convites de amizade."
+                    : "Nenhuma sugestao disponivel para os seus pets agora."}
+                </p>
+                {pets.length === 0 ? (
+                  <Link className="button-primary mt-3" href="/pets/new">
+                    Cadastrar pet
+                  </Link>
+                ) : null}
+              </div>
             ) : null}
             {isLoggedIn
               ? friendSuggestions.map((suggestion) => (
@@ -425,7 +455,7 @@ export function PetFeed({
                         </p>
                       </div>
                     </div>
-                    <SuggestionRequestForm suggestion={suggestion} />
+                    <SuggestionRequestForm suggestion={suggestion} hasPets={pets.length > 0} />
                   </article>
                 ))
               : friends.map((friend) => (
@@ -451,7 +481,7 @@ export function PetFeed({
             </div>
             <div className="feed-stat">
               <span>Amigos sugeridos</span>
-              <strong>{friends.length}</strong>
+              <strong>{isLoggedIn ? friendSuggestions.length : friends.length}</strong>
             </div>
             <div className="feed-stat">
               <span>Curtidas totais</span>

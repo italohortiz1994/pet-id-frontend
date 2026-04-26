@@ -24,16 +24,16 @@ export function FriendshipResponseForm({ friendshipId }: FriendshipResponseFormP
 
   return (
     <div className="mt-5">
-      <div className="flex flex-wrap gap-3">
-        <form action={acceptAction}>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <form action={acceptAction} className="min-w-0">
           <input type="hidden" name="friendshipId" value={friendshipId} />
-          <button className="button-primary" type="submit" disabled={isAccepting || isRejecting}>
-            {isAccepting ? "Aceitando..." : "Aceitar"}
+          <button className="button-primary w-full" type="submit" disabled={isAccepting || isRejecting}>
+            {isAccepting ? "Aceitando..." : "Aceitar solicitação"}
           </button>
         </form>
-        <form action={rejectAction}>
+        <form action={rejectAction} className="min-w-0">
           <input type="hidden" name="friendshipId" value={friendshipId} />
-          <button className="button-secondary danger-button" type="submit" disabled={isAccepting || isRejecting}>
+          <button className="button-secondary danger-button w-full" type="submit" disabled={isAccepting || isRejecting}>
             {isRejecting ? "Recusando..." : "Recusar"}
           </button>
         </form>

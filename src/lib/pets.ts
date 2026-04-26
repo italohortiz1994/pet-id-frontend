@@ -310,8 +310,16 @@ export async function getPets(filters?: PetFilters) {
   const currentUserId = await getCurrentUserId();
   const ownedPetIds = await getOwnedPetIds();
 
-  if (currentUserId && pets.some((pet) => pet.ownerId)) {
-    pets = pets.filter((pet) => pet.ownerId === currentUserId);
+  if (currentUserId) {
+    const visiblePets = new Map<string, Pet>();
+
+    for (const pet of pets) {
+      if (pet.ownerId === currentUserId || ownedPetIds.includes(pet.id)) {
+        visiblePets.set(pet.id, pet);
+      }
+    }
+
+    pets = [...visiblePets.values()];
   } else {
     pets = pets.filter((pet) => ownedPetIds.includes(pet.id));
   }

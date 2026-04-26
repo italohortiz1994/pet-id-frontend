@@ -35,6 +35,8 @@ export type FriendSuggestion = {
   friendsCount: number;
   requesterPetId: string;
   addresseePetId: string;
+  targetPetName: string;
+  friendshipStatus: string;
   canRequest: boolean;
 };
 
@@ -146,8 +148,11 @@ export async function updatePetFriendshipStatus(friendshipId: string, status: st
 }
 
 export async function likePetNews(newsId: string) {
+  const userId = await getCurrentUserId();
+
   return apiFetch(`/pet-news/${newsId}/like`, {
     method: "POST",
+    body: JSON.stringify({ userId }),
   });
 }
 
@@ -167,32 +172,52 @@ export async function getFriendSuggestions(myPets: Pet[]) {
     }))
     .filter((user) => user.id && user.id !== currentUserId);
   const myPetIds = new Set(myPets.map((pet) => pet.id));
+  const legacyPets = allPets.filter((pet) => !pet.ownerId && !myPetIds.has(pet.id));
 
-  return users.map((user): FriendSuggestion => {
+  return users.map((user, index): FriendSuggestion => {
     const userPets = allPets.filter((pet) => pet.ownerId === user.id);
-    const userPetIds = new Set(userPets.map((pet) => pet.id));
+    const fallbackPet = userPets[0] ? undefined : legacyPets[index % Math.max(legacyPets.length, 1)];
+    const availablePets = userPets.length > 0 ? userPets : fallbackPet ? [fallbackPet] : [];
+    const targetPet = availablePets.find((pet) => !myPetIds.has(pet.id));
+    const availablePetIds = new Set(availablePets.map((pet) => pet.id));
     const friendsCount = friendships.filter((friendship) => {
       if (friendship.status !== "accepted") {
         return false;
       }
 
       return (
-        userPetIds.has(friendship.requesterPetId) ||
-        userPetIds.has(friendship.addresseePetId)
+        availablePetIds.has(friendship.requesterPetId) ||
+        availablePetIds.has(friendship.addresseePetId)
       );
     }).length;
-    const requesterPetId = myPets.find((pet) => !userPetIds.has(pet.id))?.id ?? "";
-    const addresseePetId = userPets.find((pet) => !myPetIds.has(pet.id))?.id ?? "";
+    const requesterPetId = myPets[0]?.id ?? "";
+    const addresseePetId = targetPet?.id ?? "";
+    const existingFriendship = friendships.find((friendship) => {
+      const involvesMyPet =
+        myPetIds.has(friendship.requesterPetId) ||
+        myPetIds.has(friendship.addresseePetId);
+      const involvesSuggestedPet =
+        availablePetIds.has(friendship.requesterPetId) ||
+        availablePetIds.has(friendship.addresseePetId);
+
+      return (
+        involvesMyPet &&
+        involvesSuggestedPet &&
+        friendship.status !== "rejected"
+      );
+    });
 
     return {
       userId: user.id,
       userName: user.name,
       userEmail: user.email,
-      pets: userPets,
+      pets: availablePets,
       friendsCount,
       requesterPetId,
       addresseePetId,
-      canRequest: Boolean(requesterPetId && addresseePetId),
+      targetPetName: targetPet?.name ?? "",
+      friendshipStatus: existingFriendship?.status ?? "",
+      canRequest: Boolean(requesterPetId && addresseePetId && !existingFriendship),
     };
   });
 }
